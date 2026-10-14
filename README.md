@@ -18,17 +18,6 @@ and keep its attribution before you publish.**
 | `pro.css` | Dark neon UI layer (the original `style.css` is **unchanged**) |
 | `lib/three.min.js` | **You add this** (see below) |
 
-## Before you publish (required steps)
-
-1. **Add Three.js r95 locally.** Download
-   `https://cdnjs.cloudflare.com/ajax/libs/three.js/95/three.min.js` to `lib/three.min.js`.
-   The build uses it first and only falls back to the CDN if it is missing. I could not download it
-   in my sandbox (no network), so this step is yours. Do not swap in a newer Three.js: `main.js`
-   relies on r95 APIs.
-2. **Play it on real hardware** (see "What is and isn't verified").
-3. **Read CrazyGames' current requirements** and run their QA tooling: https://docs.crazygames.com
-4. Zip the folder contents (so `index.html` is at the root). Do not include `dev-tests/`.
-
 ## Controls
 
 Drag a face to turn a layer; drag the background to rotate the cube.
@@ -65,24 +54,3 @@ Keyboard: `U D L R F B` turn faces (Shift = reverse), arrows rotate the cube, `Z
 - A permanent animation forced full-rate rendering even when nothing moved.
 - Page title was "Document"; no keyboard support (`keyboardMove` existed but was never wired).
 - A drag interrupted by the OS / window blur could leave the cube stuck.
-
-## What changed in main.js
-
-57 anchored patches, listed in `dev-tests/build_main.py` + `build_part2.py`; each aborts the build if its
-anchor doesn't match exactly once, so nothing is applied silently in the wrong place.
-
-## What is and isn't verified
-
-Verified here (79 automated checks, real Chromium, Three.js **stubbed**): boot/loader, every error screen,
-storage fallback inside a sandboxed iframe, preference persistence, legacy-score migration, seeded daily
-scramble determinism, undo/redo logic, keyboard mapping, pause correctness (timer excludes paused time),
-hidden-tab behaviour, render throttling (60.5Hz -> 30.0 renders/s idle), pixel-ratio cap, adaptive
-resolution logic, SDK call order against a **fake** SDK, layouts at phone/tablet/desktop sizes.
-
-**Not verified** (needs your eyes/hardware):
-- Actual 3D rendering and turning with real Three.js r95 (the stub renders nothing).
-- Touch dragging feel on real phones; arrow-key cube rotation *direction* (implemented from the
-  original `rotateCube` convention, may need a sign flip).
-- Adaptive-resolution thresholds on genuinely slow GPUs.
-- Behaviour against the **real** CrazyGames SDK and QA tool; their size/request/ad-placement rules.
-- Sound effects (synthesized; not listened to).
