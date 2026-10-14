@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,viewport-fit=cover">
+    <title>The Cube - 3D Cube Puzzle</title>
+    <meta name="description" content="A smooth 3D cube puzzle. Scramble, solve, undo and chase your best time on 2x2 to 5x5 cubes, with a new daily challenge every day.">
+    <meta name="theme-color" content="#070b16">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23070b16'/%3E%3Cg%3E%3Crect x='5' y='5' width='6' height='6' rx='1.4' fill='%2319c8ff'/%3E%3Crect x='13' y='5' width='6' height='6' rx='1.4' fill='%23f4fbff'/%3E%3Crect x='21' y='5' width='6' height='6' rx='1.4' fill='%23ff2d6f'/%3E%3Crect x='5' y='13' width='6' height='6' rx='1.4' fill='%233dff8a'/%3E%3Crect x='13' y='13' width='6' height='6' rx='1.4' fill='%2319c8ff'/%3E%3Crect x='21' y='13' width='6' height='6' rx='1.4' fill='%23f7ff3c'/%3E%3Crect x='5' y='21' width='6' height='6' rx='1.4' fill='%23ff8a1f'/%3E%3Crect x='13' y='21' width='6' height='6' rx='1.4' fill='%23ff2d6f'/%3E%3Crect x='21' y='21' width='6' height='6' rx='1.4' fill='%2319c8ff'/%3E%3C/g%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pro.css">
+</head>
+<body>
+
+<!-- ============================ Loading / error screen ============================ -->
+<div id="boot" class="boot pro-layer" role="status" aria-live="polite">
+  <div class="boot__inner">
+    <div class="boot__cube" aria-hidden="true">
+      <i style="--c:#19c8ff"></i><i style="--c:#f4fbff"></i><i style="--c:#ff2d6f"></i>
+      <i style="--c:#3dff8a"></i><i style="--c:#19c8ff"></i><i style="--c:#f7ff3c"></i>
+      <i style="--c:#ff8a1f"></i><i style="--c:#ff2d6f"></i><i style="--c:#19c8ff"></i>
+    </div>
+    <div class="boot__title pro-display">The Cube</div>
+    <div class="boot__bar" aria-hidden="true"><div class="boot__fill" id="boot-fill"></div></div>
+    <div class="boot__msg" id="boot-msg">Starting...</div>
+
+    <div class="boot__error" id="boot-error" hidden role="alert">
+      <h2 class="boot__error-title" id="boot-error-title">The game could not start</h2>
+      <p id="boot-error-text"></p>
+      <ul id="boot-error-hints"></ul>
+      <button type="button" class="pro-btn pro-btn--primary" id="boot-reload">Reload the game</button>
+      <details class="boot__details">
+        <summary>Technical details</summary>
+        <pre id="boot-error-detail"></pre>
+      </details>
+    </div>
+  </div>
+</div>
+
+<noscript>
+  <div class="boot pro-layer"><div class="boot__inner">
+    <div class="boot__title pro-display">The Cube</div>
+    <p class="boot__msg">JavaScript is turned off. Turn it on in your browser settings to play.</p>
+  </div></div>
+</noscript>
+
+<!-- ============================ Original game UI (unchanged structure) ============================ -->
+<!-- Based on: https://bsehovac.github.io/the-cube/ -->
+<div class="ui">
+
+    <div class="ui__background"></div>
+
+    <div class="ui__game"></div>
+
+    <div class="ui__texts">
+      <h1 class="text text--title">
+        <span>THE</span>
+        <span>CUBE</span>
+      </h1>
+      <div class="text text--note">
+        Double tap to start
+      </div>
+      <div class="text text--timer">
+        0:00
+      </div>
+      <div class="text text--complete">
+        <span>Complete!</span>
+      </div>
+      <div class="text text--best-time">
+        <icon trophy></icon>
+        <span>Best Time!</span>
+      </div>
+    </div>
+
+    <div class="ui__prefs">
+      <range name="size" title="Cube Size" list="2,3,4,5"></range>
+      <range name="flip" title="Flip Type" list="Swift&nbsp;,Smooth,Bounce"></range>
+      <range name="scramble" title="Scramble Length" list="20,25,30"></range>
+      <range name="fov" title="Camera Angle" list="Ortographic,Perspective"></range>
+      <range name="theme" title="Color Scheme" list="Neon,Cube,Erno,Dust,Camo,Rain"></range>
+    </div>
+
+    <div class="ui__theme">
+      <range name="hue" title="Hue" color></range>
+      <range name="saturation" title="Saturation" color></range>
+      <range name="lightness" title="Lightness" color></range>
+    </div>
+
+    <div class="ui__stats">
+      <div class="stats" name="cube-size">
+        <i>Cube:</i><b>3x3x3</b>
+      </div>
+      <div class="stats" name="total-solves">
+        <i>Total solves:</i><b>-</b>
+      </div>
+      <div class="stats" name="best-time">
+        <i>Best time:</i><b>-</b>
+      </div>
+      <div class="stats" name="worst-time">
+        <i>Worst time:</i><b>-</b>
+      </div>
+      <div class="stats" name="last-solve">
+        <i>Last solve:</i><b>-</b>
+      </div>
+      <div class="stats" name="best-moves">
+        <i>Fewest moves:</i><b>-</b>
+      </div>
+      <div class="stats" name="average-5">
+        <i>Average of 5:</i><b>-</b>
+      </div>
+      <div class="stats" name="average-12">
+        <i>Average of 12:</i><b>-</b>
+      </div>
+      <div class="stats" name="average-25">
+        <i>Average of 25:</i><b>-</b>
+      </div>
+    </div>
+
+    <div class="ui__buttons">
+      <button class="btn btn--bl btn--stats" aria-label="Statistics">
+        <icon trophy></icon>
+      </button>
+      <button class="btn btn--br btn--prefs" aria-label="Settings">
+        <icon settings></icon>
+      </button>
+      <button class="btn btn--bl btn--back" aria-label="Back">
+        <icon back></icon>
+      </button>
+      <button class="btn btn--br btn--theme" aria-label="Edit colors">
+        <icon theme></icon>
+      </button>
+      <button class="btn btn--br btn--reset" aria-label="Reset colors">
+        <icon reset></icon>
+      </button>
+    </div>
+
+</div>
+
+<!-- ============================ HUD + overlays (driven by pro.js) ============================ -->
+<div id="pro" class="pro pro-layer" data-state="boot">
+
+  <div class="pro-util" role="toolbar" aria-label="Game options">
+    <button type="button" class="pro-icon" id="pro-sound" aria-label="Sound on" aria-pressed="true" title="Sound (M)" data-show="menu playing complete stats prefs theme"></button>
+    <button type="button" class="pro-icon" id="pro-fs" aria-label="Fullscreen" title="Fullscreen (F)" data-show="menu playing complete stats prefs theme" hidden></button>
+    <button type="button" class="pro-icon" id="pro-help" aria-label="How to play" title="How to play (H)" data-show="menu playing stats prefs"></button>
+    <button type="button" class="pro-icon" id="pro-pause" aria-label="Pause" title="Pause (P or Esc)" data-show="playing"></button>
+  </div>
+
+  <div class="pro-menu" data-show="menu">
+    <button type="button" class="pro-btn pro-btn--primary" id="pro-play">
+      <span class="pro-display" id="pro-play-label">Play</span>
+      <small id="pro-play-sub">3x3 cube</small>
+    </button>
+    <button type="button" class="pro-btn pro-btn--ghost" id="pro-daily">
+      <span id="pro-daily-label">Daily challenge</span>
+      <small id="pro-daily-sub">Same scramble for everyone today</small>
+    </button>
+  </div>
+
+  <div class="pro-dock" data-show="playing">
+    <button type="button" class="pro-icon" id="pro-undo" aria-label="Undo move" title="Undo (Z)" disabled></button>
+    <div class="pro-moves" aria-live="off">
+      <b class="pro-display" id="pro-moves">0</b>
+      <small>moves</small>
+    </div>
+    <button type="button" class="pro-icon" id="pro-redo" aria-label="Redo move" title="Redo (Y)" disabled></button>
+  </div>
+
+  <div class="pro-result" id="pro-result" data-show="complete" role="status">
+    <b class="pro-display" id="pro-result-moves">0 moves</b>
+    <span id="pro-result-extra"></span>
+  </div>
+
+  <div class="pro-tip" id="pro-tip" hidden role="note">
+    <span id="pro-tip-text"></span>
+    <button type="button" class="pro-tip__x" id="pro-tip-close" aria-label="Dismiss tip">&times;</button>
+  </div>
+</div>
+
+<!-- Pause -->
+<div class="pro-overlay pro-layer" id="pro-pause-ui" hidden>
+  <div class="pro-card" role="dialog" aria-modal="true" aria-labelledby="pro-pause-title">
+    <h2 class="pro-card__title pro-display" id="pro-pause-title">Paused</h2>
+    <div class="pro-readout">
+      <div><span>Time</span><b class="pro-display" id="pro-pause-time">0:00</b></div>
+      <div><span>Moves</span><b class="pro-display" id="pro-pause-moves">0</b></div>
+    </div>
+    <button type="button" class="pro-btn pro-btn--primary pro-btn--block" id="pro-resume"><span class="pro-display">Resume</span></button>
+    <div class="pro-card__row">
+      <button type="button" class="pro-btn pro-btn--ghost" id="pro-restart">New scramble</button>
+      <button type="button" class="pro-btn pro-btn--ghost" id="pro-quit">Quit to menu</button>
+    </div>
+    <div class="pro-field">
+      <span class="pro-field__label" id="pro-q-label">Graphics</span>
+      <div class="pro-seg" role="group" aria-labelledby="pro-q-label" id="pro-quality">
+        <button type="button" data-q="auto" aria-pressed="true">Auto</button>
+        <button type="button" data-q="high" aria-pressed="false">Sharp</button>
+        <button type="button" data-q="low" aria-pressed="false">Fast</button>
+      </div>
+      <small class="pro-field__hint">Auto lowers resolution only if your device struggles.</small>
+    </div>
+  </div>
+</div>
+
+<!-- How to play -->
+<div class="pro-overlay pro-layer" id="pro-help-ui" hidden>
+  <div class="pro-card pro-card--wide" role="dialog" aria-modal="true" aria-labelledby="pro-help-title" data-scroll>
+    <h2 class="pro-card__title pro-display" id="pro-help-title">How to play</h2>
+    <p>Twist the layers until every face of the cube is a single colour. The timer starts on your first move.</p>
+    <h3>Turn a layer</h3>
+    <p>Drag across a face of the cube. Drag on the empty background to rotate the whole cube and see the other sides.</p>
+    <h3>Keyboard</h3>
+    <dl class="pro-keys">
+      <div><dt><kbd>U</kbd> <kbd>D</kbd> <kbd>L</kbd> <kbd>R</kbd> <kbd>F</kbd> <kbd>B</kbd></dt><dd>Turn the up, down, left, right, front or back face. Hold <kbd>Shift</kbd> to turn it the other way.</dd></div>
+      <div><dt><kbd>Arrow keys</kbd></dt><dd>Rotate the whole cube</dd></div>
+      <div><dt><kbd>Z</kbd> / <kbd>Y</kbd></dt><dd>Undo / redo</dd></div>
+      <div><dt><kbd>P</kbd> or <kbd>Esc</kbd></dt><dd>Pause or resume</dd></div>
+      <div><dt><kbd>Space</kbd></dt><dd>Start from the menu</dd></div>
+      <div><dt><kbd>M</kbd> / <kbd>F</kbd> / <kbd>H</kbd></dt><dd>Sound / fullscreen / this help</dd></div>
+    </dl>
+    <h3>Daily challenge</h3>
+    <p>Everyone gets the same scramble each day (UTC). Your best time for each cube size is saved on this device.</p>
+    <button type="button" class="pro-btn pro-btn--primary pro-btn--block" id="pro-help-close"><span class="pro-display">Got it</span></button>
+  </div>
+</div>
+
+<!-- Confirm -->
+<div class="pro-overlay pro-layer" id="pro-confirm" hidden>
+  <div class="pro-card" role="alertdialog" aria-modal="true" aria-labelledby="pro-confirm-title" aria-describedby="pro-confirm-text">
+    <h2 class="pro-card__title pro-display" id="pro-confirm-title">Are you sure?</h2>
+    <p id="pro-confirm-text"></p>
+    <div class="pro-card__row">
+      <button type="button" class="pro-btn pro-btn--ghost" id="pro-confirm-no">Keep playing</button>
+      <button type="button" class="pro-btn pro-btn--primary" id="pro-confirm-yes"><span class="pro-display">Yes</span></button>
+    </div>
+  </div>
+</div>
+
+<div id="pro-toast" class="pro-toast pro-layer" role="status" aria-live="polite"></div>
+
+<script src="boot.js"></script>
+</body>
+</html>
