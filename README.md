@@ -4,9 +4,6 @@ A 3D cube puzzle (2x2 to 5x5) built on Three.js **r95**. This build keeps the or
 adds a pause system, undo/redo, keyboard play, daily challenge, a dark neon theme, loading/error
 handling, render throttling and CrazyGames SDK hooks.
 
-Based on "The Cube" by bsehovac (https://github.com/bsehovac/the-cube). **Check that repo's licence
-and keep its attribution before you publish.**
-
 ## Files
 
 | File | Purpose |
